@@ -17,8 +17,5 @@ runs a small subset. The detector and all random degradations are deterministic 
 ## Independent re-run
 
 The detector stage (`rfv-run`) was re-run on a second machine (Ubuntu on WSL2, OpenCV 4.10.0, one CPU
-thread, about 5 minutes). The per-frame detection counts (`tp`, `n_gt`, `n_det`) of all 2,880 rows were
-identical to `docs/results/frames.csv`, and the AUC point estimates of `rfv-analyze` were identical; the
-bootstrap intervals differ in the third decimal because the shipped table was analysed with a different
-resample count. OpenCV 5 is not supported (its DNN module no longer reads Darknet models), hence the
+thread, about 5 minutes). The per-frame detection counts (`tp`, `n_gt`, `n_det`) of all 2,880 rows were identical to `docs/results/frames.csv`, and `rfv-analyze` (1000 bootstrap resamples, fixed seed) reproduced the AUC point estimates and the bootstrap intervals exactly. OpenCV 5 is not supported (its DNN module no longer reads Darknet models), hence the
 `opencv-python-headless>=4.8,<5` pin.
