@@ -13,7 +13,7 @@ authors = [{ name = "soheylfalahzade" }]
 keywords = ["intelligent-transportation-systems", "reliability", "real-footage", "computer-vision", "yolo"]
 dependencies = [
   "numpy>=1.24", "pandas>=2.0", "matplotlib>=3.7", "scipy>=1.10",
-  "opencv-python-headless>=4.8",
+  "opencv-python-headless>=4.8,<5",
   "perception-reliability-monitor @ git+https://github.com/soheylfalahzade/perception-reliability-monitor.git@v0.1.0",
 ]
 

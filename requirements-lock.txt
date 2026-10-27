@@ -7,7 +7,7 @@ pillow==12.1.1
 pytest==9.1.1
 pytest-cov
 scipy==1.17.1
-opencv-python-headless
+opencv-python-headless>=4.8,<5
 ruff==0.17.1
 mypy==2.4.0
 eclipse-sumo==1.28.0
