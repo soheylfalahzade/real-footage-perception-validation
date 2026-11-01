@@ -1,5 +1,9 @@
 # real-footage-perception-validation
 
+<!-- banner -->
+<p align="center"><img src="docs/assets/banner.svg" alt="real-footage-perception-validation" width="860"></p>
+
+
 **A controlled check of camera-reliability monitoring on real road footage with an off-the-shelf detector.**
 
 Three sibling repositories evaluate perception components on *simulated* inputs. This repository asks the
