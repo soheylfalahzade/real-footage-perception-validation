@@ -37,3 +37,14 @@ is fitted on training streams and evaluated on held-out streams.
 on the other (both directions). AUC is rank-based; ECE uses 10 equal-width bins. Confidence intervals are
 percentile bootstraps over *streams* (1000 resamples) because frames inside a stream are strongly
 dependent. Baselines: a model using only log-brightness and a model using only the detector count ratio.
+
+## 7. Extending the evaluation (additional clips, second detector)
+`rfv-run --extra-dir DIR` adds every clip in `DIR` (mp4, avi, mov, mkv) with at least 2 x 60 sampled frames.
+Each is sampled at about 5 fps (stride = round(fps / 5)) in two consecutive 60-frame segments, so the protocol
+of sections 3 to 6 applies unchanged. With three or more clips the cross-video split becomes
+*leave-one-video-out* (train on all other clips, test on the held-out clip); with the two shipped clips the
+original two directional splits are kept, so the reported numbers are unaffected.
+
+`rfv-run --detector yolov8n-onnx` replaces the detector by YOLOv8-nano exported to ONNX and run through
+OpenCV's DNN module (640 x 640 input; classes car, motorcycle, bus, truck; score 0.3, NMS 0.45; no training).
+Results are written to a separate segment cache, so both detectors can be compared on identical frames.

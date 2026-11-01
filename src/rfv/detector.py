@@ -48,3 +48,53 @@ class DarknetDetector:
             x, y, bw, bh = boxes[int(i)]
             res.append(Box(max(x, 0), max(y, 0), min(x + bw, w), min(y + bh, h), scores[int(i)]))
         return res
+
+
+def decode_yolov8(out: np.ndarray, w: int, h: int, conf: float, nms: float,
+                  size: int = 640) -> list[Box]:
+    """Decode a YOLOv8 ONNX output of shape ``(1, 84, N)`` into vehicle boxes (pixels)."""
+    pred = np.asarray(out).reshape(out.shape[-2], out.shape[-1]).T          # (N, 84)
+    cls_ids = list(VEHICLE_IDS)
+    scores_all = pred[:, 4:][:, cls_ids]
+    best = scores_all.argmax(axis=1)
+    score = scores_all[np.arange(len(pred)), best]
+    keep = score >= conf
+    pred, score = pred[keep], score[keep]
+    sx, sy = w / size, h / size
+    boxes = [[int((c[0] - c[2] / 2) * sx), int((c[1] - c[3] / 2) * sy),
+              int(c[2] * sx), int(c[3] * sy)] for c in pred]
+    idx = cv2.dnn.NMSBoxes(boxes, score.tolist(), conf, nms) if boxes else []
+    res = []
+    for i in np.array(idx).reshape(-1):
+        x, y, bw, bh = boxes[int(i)]
+        res.append(Box(max(x, 0), max(y, 0), min(x + bw, w), min(y + bh, h), float(score[int(i)])))
+    return res
+
+
+class OnnxYolov8Detector:
+    """YOLOv8 exported to ONNX (``yolo export model=yolov8n.pt format=onnx imgsz=640 opset=12``).
+
+    A second, more modern off-the-shelf detector for the same protocol; no training is performed.
+    """
+
+    def __init__(self, data_dir: str | Path, name: str = "yolov8n.onnx", conf: float = 0.3,
+                 nms: float = 0.45, input_size: int = 640, threads: int = 1) -> None:
+        cv2.setNumThreads(threads)
+        dnn: Any = cv2.dnn
+        self.net = dnn.readNetFromONNX(str(Path(data_dir) / name))
+        self.conf, self.nms, self.size = conf, nms, input_size
+
+    def __call__(self, img: np.ndarray, conf: float | None = None) -> list[Box]:
+        h, w = img.shape[:2]
+        blob = cv2.dnn.blobFromImage(img, 1 / 255.0, (self.size, self.size), swapRB=True,
+                                     crop=False)
+        self.net.setInput(blob)
+        out = self.net.forward()
+        return decode_yolov8(out, w, h, self.conf if conf is None else conf, self.nms, self.size)
+
+
+def make_detector(kind: str, data_dir: str | Path) -> DarknetDetector | OnnxYolov8Detector:
+    """``yolov4-tiny`` (default, fetched with checksum) or ``yolov8n-onnx`` (user-exported file)."""
+    if kind == "yolov8n-onnx":
+        return OnnxYolov8Detector(data_dir)
+    return DarknetDetector(data_dir)

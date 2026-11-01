@@ -66,3 +66,35 @@ def test_analysis_labels_and_transfer_on_separable_data():
     assert t.loc[t.cond == "clear", "retention"].iloc[0] == 1.0
     r = evaluate_split(df[df.seg == 0], df[df.seg == 1], list(range(10)), n_boot=50)
     assert r["auc"] > 0.95 and r["auc_ci95"][0] > 0.9
+
+
+def test_decode_yolov8_keeps_vehicle_classes_only():
+    from rfv.detector import decode_yolov8
+
+    n = 5
+    out = np.zeros((1, 84, n), np.float32)
+    out[0, :4, 0] = (320, 320, 100, 80)       # car (COCO id 2) with high score
+    out[0, 4 + 2, 0] = 0.9
+    out[0, :4, 1] = (100, 100, 50, 50)        # person (id 0): not a vehicle
+    out[0, 4 + 0, 1] = 0.95
+    boxes = decode_yolov8(out, 640, 640, conf=0.3, nms=0.45)
+    assert len(boxes) == 1 and boxes[0].score > 0.89
+    assert (boxes[0].x1, boxes[0].y1, boxes[0].x2, boxes[0].y2) == (270, 280, 370, 360)
+
+
+def test_clip_plan_and_leave_one_video_out(tmp_path):
+    import cv2
+
+    from rfv.analysis import splits
+    from rfv.data import discover_clips
+
+    v = tmp_path / "c.mp4"
+    w = cv2.VideoWriter(str(v), cv2.VideoWriter_fourcc(*"mp4v"), 10.0, (32, 24))
+    for i in range(300):
+        w.write(np.full((24, 32, 3), i % 255, np.uint8))
+    w.release()
+    plan = discover_clips(tmp_path)
+    assert plan["c.mp4"] == (2, (0, 120))
+    df = prepare(_fake_frames())
+    df3 = pd.concat([df, df.assign(video="c.mp4")])
+    assert sum(k.startswith("leave-one-video-out") for k in splits(df3)) == 3

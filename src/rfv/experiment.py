@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 import numpy as np
@@ -12,8 +13,8 @@ from relmon.detector import Box, match_recall
 from relmon.health import DetectorHealth
 from relmon.quality import QualityExtractor
 
-from rfv.data import PLAN, VIDEOS, fetch, load_frames
-from rfv.detector import DarknetDetector
+from rfv.data import PLAN, VIDEOS, discover_clips, fetch, load_frames
+from rfv.detector import make_detector
 
 CONDITIONS: list[tuple[str, float]] = (
     [("clear", 0.0)]
@@ -25,7 +26,7 @@ GT_CONF = 0.5              # pseudo ground truth: clear-frame detections above t
 FEATURES = [f"f{i}" for i in range(10)]
 
 
-def run_segment(det: DarknetDetector, frames: list[np.ndarray], quality: QualityExtractor,
+def run_segment(det: Callable[..., list[Box]], frames: list[np.ndarray], quality: QualityExtractor,
                 ref_count: float, seed: int, conditions: list[tuple[str, float]],
                 health_window: int = 20) -> list[dict[str, float | int | str]]:
     """Per-frame records for every condition of one segment (clear must come first)."""
@@ -57,21 +58,30 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", default="results/frames.csv")
     ap.add_argument("--max-streams", type=int, default=0, help="0 = all conditions")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--detector", choices=("yolov4-tiny", "yolov8n-onnx"), default="yolov4-tiny")
+    ap.add_argument("--extra-dir", default=None,
+                    help="folder with additional clips (mp4/avi/mov/mkv, >= 2 x 60 sampled frames)")
     args = ap.parse_args(argv)
     fetch(args.data_dir)
-    det = DarknetDetector(args.data_dir)
+    det = make_detector(args.detector, args.data_dir)
+    plan = dict(PLAN)
+    plan.update(discover_clips(args.extra_dir))
+    videos = list(VIDEOS) + [v for v in plan if v not in VIDEOS]
+    tag = "" if args.detector == "yolov4-tiny" else f"_{args.detector}"
     conds = CONDITIONS[: args.max_streams] if args.max_streams else CONDITIONS
     cache = Path(args.out).parent / "segments"
     cache.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
     parts: list[pd.DataFrame] = []
-    for video in VIDEOS:
+    for video in videos:
         quality = QualityExtractor()
         ref_count = 1.0
         for seg in SEGMENTS:
-            part = cache / f"{Path(video).stem}_seg{seg}_{len(conds)}.csv"
-            stride, starts = PLAN[video]
-            frames = load_frames(Path(args.data_dir) / video, stride=stride, start=starts[seg],
+            part = cache / f"{Path(video).stem}_seg{seg}_{len(conds)}{tag}.csv"
+            stride, starts = plan[video]
+            root = args.data_dir if video in VIDEOS else args.extra_dir
+            src = Path(root) / video
+            frames = load_frames(src, stride=stride, start=starts[seg],
                                  count=60)
             if seg == 0:
                 quality.calibrate(frames[:30])

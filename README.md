@@ -146,6 +146,20 @@ the detector weights are public files fetched at run time from their original re
 SHA-256; their licences are set by those repositories and they are not redistributed here. Commands and
 runtimes: [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md).
 
+## Extending the evaluation
+
+```bash
+# a second, more recent off-the-shelf detector (export once, then place the file in data/)
+pip install ultralytics && yolo export model=yolov8n.pt format=onnx imgsz=640 opset=12
+cp yolov8n.onnx data/
+
+# any additional footage: a folder of clips, e.g. one per camera or per city
+rfv-run --data-dir data --extra-dir clips --detector yolov8n-onnx --out results/frames_v8.csv
+rfv-analyze --frames results/frames_v8.csv --out results_v8
+```
+
+With three or more clips the cross-video split is leave-one-video-out. See `docs/METHODS.md`, section 7.
+
 ## Roadmap
 
 Human-annotated frames for the same clips; recorded adverse-weather footage; an urban signalised approach

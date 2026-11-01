@@ -66,8 +66,13 @@ def splits(df: pd.DataFrame) -> dict[str, tuple[pd.DataFrame, pd.DataFrame]]:
     """Temporal split and leave-one-video-out (both directions)."""
     vids = sorted(df["video"].unique())
     out = {"temporal (train seg 0, test seg 1)": (df[df.seg == 0], df[df.seg == 1])}
-    for a, b in ((vids[0], vids[1]), (vids[1], vids[0])):
-        out[f"cross-video (train {a[:12]}, test {b[:12]})"] = (df[df.video == a], df[df.video == b])
+    if len(vids) == 2:
+        for a, b in ((vids[0], vids[1]), (vids[1], vids[0])):
+            out[f"cross-video (train {a[:12]}, test {b[:12]})"] = (df[df.video == a],
+                                                                    df[df.video == b])
+    else:                                       # leave-one-video-out with three or more clips
+        for v in vids:
+            out[f"leave-one-video-out (test {v[:16]})"] = (df[df.video != v], df[df.video == v])
     return out
 
 

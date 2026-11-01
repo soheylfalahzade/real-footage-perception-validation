@@ -38,6 +38,38 @@ PLAN: dict[str, tuple[int, tuple[int, int]]] = {
 }
 
 
+VIDEO_EXT = (".mp4", ".avi", ".mov", ".mkv")
+SAMPLE_FPS = 5.0
+SEG_FRAMES = 60
+
+
+def clip_plan(path: str | Path) -> tuple[int, tuple[int, int]] | None:
+    """Sampling plan for an arbitrary clip: ~5 fps, two consecutive 60-frame segments.
+
+    Returns ``(stride, (start0, start1))`` or ``None`` when the clip is too short for two segments.
+    """
+    cap = cv2.VideoCapture(str(path))
+    fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
+    n = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    cap.release()
+    stride = max(int(round(fps / SAMPLE_FPS)), 1)
+    span = SEG_FRAMES * stride
+    return (stride, (0, span)) if n >= 2 * span else None
+
+
+def discover_clips(extra_dir: str | Path | None) -> dict[str, tuple[int, tuple[int, int]]]:
+    """User-supplied clips in ``extra_dir`` that are long enough, keyed by file name."""
+    out: dict[str, tuple[int, tuple[int, int]]] = {}
+    if extra_dir is None or not Path(extra_dir).is_dir():
+        return out
+    for f in sorted(Path(extra_dir).iterdir()):
+        if f.suffix.lower() in VIDEO_EXT:
+            plan = clip_plan(f)
+            if plan is not None:
+                out[f.name] = plan
+    return out
+
+
 def sha256(path: Path) -> str:
     h = hashlib.sha256()
     with open(path, "rb") as fh:
