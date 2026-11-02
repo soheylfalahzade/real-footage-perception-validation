@@ -1,0 +1,62 @@
+[
+ {
+  "clip": "MVI_20035.mp4",
+  "weather": "sunny",
+  "mean_gt_per_frame": 11.975
+ },
+ {
+  "clip": "MVI_20051.mp4",
+  "weather": "sunny",
+  "mean_gt_per_frame": 7.546666666666667
+ },
+ {
+  "clip": "MVI_39051.mp4",
+  "weather": "sunny",
+  "mean_gt_per_frame": 2.185
+ },
+ {
+  "clip": "MVI_40855.mp4",
+  "weather": "cloudy",
+  "mean_gt_per_frame": 26.643333333333334
+ },
+ {
+  "clip": "MVI_40172.mp4",
+  "weather": "cloudy",
+  "mean_gt_per_frame": 7.028333333333333
+ },
+ {
+  "clip": "MVI_40171.mp4",
+  "weather": "cloudy",
+  "mean_gt_per_frame": 7.735
+ },
+ {
+  "clip": "MVI_63544.mp4",
+  "weather": "rainy",
+  "mean_gt_per_frame": 2.4983333333333335
+ },
+ {
+  "clip": "MVI_40871.mp4",
+  "weather": "rainy",
+  "mean_gt_per_frame": 19.913333333333334
+ },
+ {
+  "clip": "MVI_63554.mp4",
+  "weather": "rainy",
+  "mean_gt_per_frame": 7.098333333333334
+ },
+ {
+  "clip": "MVI_40793.mp4",
+  "weather": "night",
+  "mean_gt_per_frame": 9.946666666666667
+ },
+ {
+  "clip": "MVI_40732.mp4",
+  "weather": "night",
+  "mean_gt_per_frame": 7.81
+ },
+ {
+  "clip": "MVI_40772.mp4",
+  "weather": "night",
+  "mean_gt_per_frame": 8.796666666666667
+ }
+]

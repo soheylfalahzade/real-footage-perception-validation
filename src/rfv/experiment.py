@@ -63,12 +63,15 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--detector", choices=("yolov4-tiny", "yolov8n-onnx"), default="yolov4-tiny")
     ap.add_argument("--extra-dir", default=None,
                     help="folder with additional clips (mp4/avi/mov/mkv, >= 2 x 60 sampled frames)")
+    ap.add_argument("--only-extra", action="store_true",
+                    help="evaluate only the clips of --extra-dir (e.g. human ground truth)")
     args = ap.parse_args(argv)
     fetch(args.data_dir)
     det = make_detector(args.detector, args.data_dir)
     plan = dict(PLAN)
     plan.update(discover_clips(args.extra_dir))
-    videos = list(VIDEOS) + [v for v in plan if v not in VIDEOS]
+    extra = [v for v in plan if v not in VIDEOS]
+    videos = extra if args.only_extra else list(VIDEOS) + extra
     tag = "" if args.detector == "yolov4-tiny" else f"_{args.detector}"
     conds = CONDITIONS[: args.max_streams] if args.max_streams else CONDITIONS
     cache = Path(args.out).parent / "segments"

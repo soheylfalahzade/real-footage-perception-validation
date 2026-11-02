@@ -156,7 +156,7 @@ weather label per sequence: sunny, cloudy, rainy, night) the same protocol can b
 # 1. encode clips and extract ground truth (3 sequences per weather class, first 600 frames each)
 rfv-detrac --root /mnt/d/hitman/Dataset/UA-DETRAC --out clips --per-weather 3
 # 2. run the protocol on them (add --detector yolov8n-onnx for the second detector)
-rfv-run --data-dir data --extra-dir clips --out results/frames_detrac.csv
+rfv-run --data-dir data --extra-dir clips --only-extra --out results/frames_detrac.csv
 rfv-analyze --frames results/frames_detrac.csv --out results_detrac
 ```
 
