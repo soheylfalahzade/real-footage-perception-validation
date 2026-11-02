@@ -146,6 +146,26 @@ the detector weights are public files fetched at run time from their original re
 SHA-256; their licences are set by those repositories and they are not redistributed here. Commands and
 runtimes: [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md).
 
+## Human-labelled ground truth (UA-DETRAC)
+
+The pseudo ground truth of the main experiment measures robustness, not accuracy. With a local copy of
+[UA-DETRAC](https://detrac-db.rit.albany.edu/) (fixed roadside cameras, human-labelled vehicle boxes, and a
+weather label per sequence: sunny, cloudy, rainy, night) the same protocol can be run against human boxes:
+
+```bash
+# 1. encode clips and extract ground truth (3 sequences per weather class, first 600 frames each)
+rfv-detrac --root /mnt/d/hitman/Dataset/UA-DETRAC --out clips --per-weather 3
+# 2. run the protocol on them (add --detector yolov8n-onnx for the second detector)
+rfv-run --data-dir data --extra-dir clips --out results/frames_detrac.csv
+rfv-analyze --frames results/frames_detrac.csv --out results_detrac
+```
+
+Ground-truth boxes below 20 px height (at 640 px width) and boxes whose centre lies in an annotated ignored
+region are dropped. A frame window is labelled reliable when its recall against the human boxes is at least
+0.6 times the recall of the *undegraded* stream of the same clip segment, so that vehicles an off-the-shelf
+detector never finds do not count as degradation. With pseudo ground truth that reference recall is 1.0 and the
+label is unchanged. UA-DETRAC is not redistributed here; follow its terms of use.
+
 ## Extending the evaluation
 
 ```bash

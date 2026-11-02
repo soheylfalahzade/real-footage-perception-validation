@@ -15,6 +15,7 @@ from relmon.quality import QualityExtractor
 
 from rfv.data import PLAN, VIDEOS, discover_clips, fetch, load_frames
 from rfv.detector import make_detector
+from rfv.detrac import gt_for_segment
 
 CONDITIONS: list[tuple[str, float]] = (
     [("clear", 0.0)]
@@ -28,12 +29,13 @@ FEATURES = [f"f{i}" for i in range(10)]
 
 def run_segment(det: Callable[..., list[Box]], frames: list[np.ndarray], quality: QualityExtractor,
                 ref_count: float, seed: int, conditions: list[tuple[str, float]],
-                health_window: int = 20) -> list[dict[str, float | int | str]]:
+                health_window: int = 20, gt_override: list[list[Box]] | None = None,
+                ) -> list[dict[str, float | int | str]]:
     """Per-frame records for every condition of one segment (clear must come first)."""
     h, w = frames[0].shape[:2]
     light = np.zeros((h, w, 3), np.float32)
     rows: list[dict[str, float | int | str]] = []
-    gt: list[list[Box]] = []
+    gt: list[list[Box]] = list(gt_override) if gt_override is not None else []
     for cond, sev in conditions:
         deg = Degrader(seed=seed, h=h, w=w)
         health = DetectorHealth(window=health_window, reference_count=ref_count)
@@ -41,7 +43,7 @@ def run_segment(det: Callable[..., list[Box]], frames: list[np.ndarray], quality
         for i, f in enumerate(frames):
             img = deg.apply(f, light, cond, sev)
             boxes = det(img)
-            if cond == "clear":
+            if cond == "clear" and gt_override is None:
                 gt.append([b for b in boxes if b.score >= GT_CONF])
             feats = np.concatenate([quality.extract(img), health.update(boxes)])
             tp, n_gt, n_det = match_recall([(b.x1, b.y1, b.x2, b.y2) for b in gt[i]], boxes,
@@ -77,10 +79,13 @@ def main(argv: list[str] | None = None) -> int:
         quality = QualityExtractor()
         ref_count = 1.0
         for seg in SEGMENTS:
-            part = cache / f"{Path(video).stem}_seg{seg}_{len(conds)}{tag}.csv"
             stride, starts = plan[video]
             root = args.data_dir if video in VIDEOS else args.extra_dir
             src = Path(root) / video
+            gt_file = src.with_suffix(".gt.json")
+            has_gt = gt_file.exists()
+            gt_tag = "_gt" if has_gt else ""
+            part = cache / f"{Path(video).stem}_seg{seg}_{len(conds)}{tag}{gt_tag}.csv"
             frames = load_frames(src, stride=stride, start=starts[seg],
                                  count=60)
             if seg == 0:
@@ -89,8 +94,12 @@ def main(argv: list[str] | None = None) -> int:
             if part.exists():
                 parts.append(pd.read_csv(part))
                 continue
-            rows = run_segment(det, frames, quality, ref_count, args.seed, conds)
-            seg_df = pd.DataFrame([{"video": video, "seg": seg, **r} for r in rows])
+            gt_seg, weather = (gt_for_segment(gt_file, starts[seg], stride, len(frames))
+                               if has_gt else (None, ""))
+            rows = run_segment(det, frames, quality, ref_count, args.seed, conds,
+                               gt_override=gt_seg)
+            seg_df = pd.DataFrame([{"video": video, "seg": seg, "weather": weather, **r}
+                                   for r in rows])
             seg_df.to_csv(part, index=False)
             parts.append(seg_df)
             print(f"{video} seg{seg} done, {time.time() - t0:.0f}s elapsed", flush=True)

@@ -48,3 +48,12 @@ original two directional splits are kept, so the reported numbers are unaffected
 `rfv-run --detector yolov8n-onnx` replaces the detector by YOLOv8-nano exported to ONNX and run through
 OpenCV's DNN module (640 x 640 input; classes car, motorcycle, bus, truck; score 0.3, NMS 0.45; no training).
 Results are written to a separate segment cache, so both detectors can be compared on identical frames.
+
+## 8. Human ground truth (UA-DETRAC)
+`rfv-detrac` encodes the first 600 frames of selected UA-DETRAC sequences at 25 fps (640 px width) and writes
+`<clip>.gt.json` with the human boxes, the sequence weather label and the filter settings. Boxes with height under
+20 px (at 640 px width) or centre inside an ignored region are removed. `rfv-run` uses these boxes for every
+degradation stream of the clip instead of the clear-frame detections, so `retention` is recall against human
+boxes. The reliability label becomes `retention >= 0.6 * c`, where `c` is the recall of the undegraded stream of
+the same clip segment (floored at 0.05); with pseudo ground truth `c = 1` and the definition of section 3 is
+recovered. The cross-clip split is leave-one-video-out (section 7).

@@ -24,6 +24,7 @@ dev = ["pytest>=7.4", "pytest-cov>=4.1", "ruff>=0.4", "mypy>=1.8"]
 rfv-preflight = "rfv.preflight:main"
 rfv-fetch = "rfv.data:main"
 rfv-run = "rfv.experiment:main"
+rfv-detrac = "rfv.detrac:main"
 rfv-analyze = "rfv.analysis:main"
 rfv-gif = "rfv.viz:main"
 

@@ -25,8 +25,15 @@ def prepare(df: pd.DataFrame) -> pd.DataFrame:
     df["tp_w"] = g["tp"].transform(lambda s: s.rolling(WINDOW, min_periods=WINDOW).sum())
     df["gt_w"] = g["n_gt"].transform(lambda s: s.rolling(WINDOW, min_periods=WINDOW).sum())
     df["retention"] = df["tp_w"] / df["gt_w"].where(df["gt_w"] > 0)
+    # Reference recall of the undegraded stream of the same clip segment: 1.0 with pseudo
+    # ground truth (the clear stream defines it), below 1.0 with human boxes that the detector
+    # cannot fully recover.
+    clear = df[df["cond"] == "clear"].groupby(["video", "seg"])[["tp", "n_gt"]].sum()
+    ref = (clear["tp"] / clear["n_gt"].where(clear["n_gt"] > 0)).rename("clear_ret")
+    df = df.merge(ref, left_on=["video", "seg"], right_index=True, how="left")
+    df["clear_ret"] = df["clear_ret"].fillna(1.0).clip(lower=0.05)
     df = df.dropna(subset=["retention"])
-    df["label"] = (df["retention"] >= RELIABLE_RETENTION).astype(float)
+    df["label"] = (df["retention"] >= RELIABLE_RETENTION * df["clear_ret"]).astype(float)
     df["stream"] = df[KEY].astype(str).agg("|".join, axis=1)
     return df
 
