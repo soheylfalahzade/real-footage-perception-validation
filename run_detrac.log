@@ -1,15 +1,25 @@
-Traceback (most recent call last):
-  File "/home/dmin/repos/real-footage-perception-validation/.venv/bin/rfv-run", line 6, in <module>
-    sys.exit(main())
-             ~~~~^^
-  File "/home/dmin/repos/real-footage-perception-validation/src/rfv/experiment.py", line 69, in main
-    fetch(args.data_dir)
-    ~~~~~^^^^^^^^^^^^^^^
-  File "/home/dmin/repos/real-footage-perception-validation/src/rfv/data.py", line 89, in fetch
-    urllib.request.urlretrieve(url, path)  # noqa: S310 - fixed https URLs above
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
-  File "/home/dmin/miniconda3/lib/python3.14/urllib/request.py", line 248, in urlretrieve
-    raise ContentTooShortError(
-        "retrieval incomplete: got only %i out of %i bytes"
-        % (read, size), result)
-urllib.error.ContentTooShortError: <urlopen error retrieval incomplete: got only 863232 out of 6648163 bytes>
+MVI_20035.mp4 seg0 done, 73s elapsed
+MVI_20035.mp4 seg1 done, 146s elapsed
+MVI_20051.mp4 seg0 done, 220s elapsed
+MVI_20051.mp4 seg1 done, 292s elapsed
+MVI_39051.mp4 seg0 done, 369s elapsed
+MVI_39051.mp4 seg1 done, 446s elapsed
+MVI_40171.mp4 seg0 done, 521s elapsed
+MVI_40171.mp4 seg1 done, 593s elapsed
+MVI_40172.mp4 seg0 done, 668s elapsed
+MVI_40172.mp4 seg1 done, 736s elapsed
+MVI_40732.mp4 seg0 done, 810s elapsed
+MVI_40732.mp4 seg1 done, 878s elapsed
+MVI_40772.mp4 seg0 done, 950s elapsed
+MVI_40772.mp4 seg1 done, 1020s elapsed
+MVI_40793.mp4 seg0 done, 1094s elapsed
+MVI_40793.mp4 seg1 done, 1166s elapsed
+MVI_40855.mp4 seg0 done, 1242s elapsed
+MVI_40855.mp4 seg1 done, 1315s elapsed
+MVI_40871.mp4 seg0 done, 1394s elapsed
+MVI_40871.mp4 seg1 done, 1468s elapsed
+MVI_63544.mp4 seg0 done, 1545s elapsed
+MVI_63544.mp4 seg1 done, 1617s elapsed
+MVI_63554.mp4 seg0 done, 1694s elapsed
+MVI_63554.mp4 seg1 done, 1765s elapsed
+wrote results/frames_detrac.csv

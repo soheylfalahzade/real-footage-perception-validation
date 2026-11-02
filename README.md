@@ -105,6 +105,9 @@ and fog 0.5 are survived (0.73).
 | the monitor predicts detector reliability on real frames | held-out AUC 0.87-0.97 for quality, health and combined features | `docs/results/analysis.json` |
 | the monitor beats simple baselines | **partially supported**: beats brightness-only (about 0.55); not shown to beat the count-ratio baseline | `docs/results/analysis.json` |
 | probabilities transfer across sites | **not supported**: ECE 0.12-0.23 across clips | `docs/results/analysis.json` |
+| the monitor works against human-labelled boxes (UA-DETRAC, 12 clips) | temporal split combined AUC 0.973 [0.957, 0.985]; leave-one-clip-out median 0.989, worst 0.939 | `docs/results/analysis_detrac.json` |
+| the monitor beats a detector-count baseline on human boxes | **partially supported**: 0.973 [0.957, 0.985] vs 0.947 [0.918, 0.969], intervals overlap; worst clip 0.939 vs 0.879 | `docs/results/analysis_detrac.json` |
+| probabilities transfer across clips with human boxes | **partially supported**: leave-one-clip-out ECE median 0.036, worst 0.116 (a rainy clip) | `docs/results/analysis_detrac.json` |
 | monitoring improves control on real footage | **not tested** | |
 
 ## Threats to validity
@@ -165,6 +168,38 @@ region are dropped. A frame window is labelled reliable when its recall against 
 0.6 times the recall of the *undegraded* stream of the same clip segment, so that vehicles an off-the-shelf
 detector never finds do not count as degradation. With pseudo ground truth that reference recall is 1.0 and the
 label is unchanged. UA-DETRAC is not redistributed here; follow its terms of use.
+
+### Results with human ground truth
+
+12 UA-DETRAC clips (3 sunny, 3 cloudy, 3 rainy, 3 night; 600 frames each, two 60-frame segments), the same 12
+degradation streams per segment, YOLOv4-tiny: 288 streams, 13,248 frames, 69.6 % of frames labelled reliable.
+Intervals are bootstrap intervals over streams; frames within a stream are strongly dependent, so they are
+optimistic.
+
+| split | features | AUC [95% CI] | ECE |
+|---|---|---|---|
+| temporal (train segment 0, test segment 1) | quality | 0.932 [0.894, 0.961] | 0.046 |
+| | health | 0.969 [0.952, 0.982] | 0.021 |
+| | combined | 0.973 [0.957, 0.985] | 0.016 |
+| | brightness only | 0.660 [0.544, 0.769] | 0.095 |
+| | detector count ratio only | 0.947 [0.918, 0.969] | 0.075 |
+
+Leave-one-clip-out (train on 11 clips, test on the twelfth), over the 12 test clips:
+
+| features | AUC median | AUC range | ECE median | ECE range |
+|---|---|---|---|---|
+| quality | 0.969 | 0.863 to 1.000 | 0.092 | 0.068 to 0.205 |
+| health | 0.988 | 0.937 to 1.000 | 0.036 | 0.023 to 0.103 |
+| combined | 0.989 | 0.939 to 1.000 | 0.036 | 0.018 to 0.116 |
+| brightness only | 0.662 | 0.556 to 0.883 | 0.122 | 0.092 to 0.155 |
+| detector count ratio only | 0.988 | 0.879 to 1.000 | 0.058 | 0.026 to 0.297 |
+
+The weakest clip for the combined and the health features is MVI_40172 (cloudy); the worst calibration of the
+combined features is on MVI_63554 (rainy, ECE 0.116). The count-ratio baseline is close to the combined features
+in the median and clearly worse in the worst case (AUC 0.879 on MVI_40172, ECE 0.297 on MVI_40732, a night clip).
+Against human boxes, calibration transferred across clips far better (median ECE 0.036) than across the two
+pseudo-ground-truth clips above (0.12 to 0.23); the two experiments differ in clips, labels and number of
+training clips, so this is not a controlled comparison. The degradations remain synthetic.
 
 ## Extending the evaluation
 
