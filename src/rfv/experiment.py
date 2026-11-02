@@ -66,7 +66,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--only-extra", action="store_true",
                     help="evaluate only the clips of --extra-dir (e.g. human ground truth)")
     args = ap.parse_args(argv)
-    fetch(args.data_dir)
+    fetch(args.data_dir, videos=not args.only_extra)
     det = make_detector(args.detector, args.data_dir)
     plan = dict(PLAN)
     plan.update(discover_clips(args.extra_dir))

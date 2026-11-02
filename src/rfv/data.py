@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -78,17 +79,40 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-def fetch(data_dir: str | Path) -> dict[str, Path]:
-    """Download missing files and verify their SHA-256 digests; nothing is redistributed."""
+def _download(url: str, path: Path, tries: int = 4) -> None:
+    """Download to a ``.part`` file and rename on success, so an interrupted run leaves no stub."""
+    part = path.with_name(path.name + ".part")
+    for k in range(tries):
+        try:
+            urllib.request.urlretrieve(url, part)  # noqa: S310 - fixed https URLs above
+            part.replace(path)
+            return
+        except (OSError, urllib.error.ContentTooShortError):
+            part.unlink(missing_ok=True)
+            if k == tries - 1:
+                raise
+
+
+def fetch(data_dir: str | Path, videos: bool = True) -> dict[str, Path]:
+    """Download missing files and verify their SHA-256 digests; nothing is redistributed.
+
+    With ``videos=False`` only the detector files are fetched (enough when clips are supplied).
+    A file that fails its checksum is removed and fetched once more.
+    """
     root = Path(data_dir)
     root.mkdir(parents=True, exist_ok=True)
     out = {}
     for name, (url, digest) in FILES.items():
+        if not videos and Path(name).suffix.lower() in VIDEO_EXT:
+            continue
         path = root / name
         if not path.exists():
-            urllib.request.urlretrieve(url, path)  # noqa: S310 - fixed https URLs above
+            _download(url, path)
         if sha256(path) != digest:
-            raise RuntimeError(f"checksum mismatch for {name}; remove the file and retry")
+            path.unlink()
+            _download(url, path)
+            if sha256(path) != digest:
+                raise RuntimeError(f"checksum mismatch for {name}")
         out[name] = path
     return out
 
