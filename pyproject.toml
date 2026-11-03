@@ -25,6 +25,7 @@ rfv-preflight = "rfv.preflight:main"
 rfv-fetch = "rfv.data:main"
 rfv-run = "rfv.experiment:main"
 rfv-detrac = "rfv.detrac:main"
+rfv-figures = "rfv.figures:main"
 rfv-analyze = "rfv.analysis:main"
 rfv-gif = "rfv.viz:main"
 

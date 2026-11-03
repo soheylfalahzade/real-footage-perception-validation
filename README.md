@@ -194,6 +194,12 @@ Leave-one-clip-out (train on 11 clips, test on the twelfth), over the 12 test cl
 | brightness only | 0.662 | 0.556 to 0.883 | 0.122 | 0.092 to 0.155 |
 | detector count ratio only | 0.988 | 0.879 to 1.000 | 0.058 | 0.026 to 0.297 |
 
+<p align="center"><img src="docs/assets/detrac_loco.png" alt="Leave-one-clip-out results on UA-DETRAC" width="900"></p>
+
+*Per held-out clip: AUC with 95% bootstrap interval (left) and ECE (right) for the combined features (filled) and
+the detector-count baseline (open), coloured by the clip's weather label. The per-clip values are transcribed from
+the `rfv-analyze` output into `docs/results/detrac_leave_one_clip_out.csv`; regenerate the figure with `rfv-figures`.*
+
 The weakest clip for the combined and the health features is MVI_40172 (cloudy); the worst calibration of the
 combined features is on MVI_63554 (rainy, ECE 0.116). The count-ratio baseline is close to the combined features
 in the median and clearly worse in the worst case (AUC 0.879 on MVI_40172, ECE 0.297 on MVI_40732, a night clip).
