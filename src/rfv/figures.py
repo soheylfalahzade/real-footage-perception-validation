@@ -10,7 +10,7 @@ COLORS = {"sunny": "#e0a030", "cloudy": "#7a8ba0", "rainy": "#4c78a8", "night": 
 ORDER = ("sunny", "cloudy", "rainy", "night")
 
 
-def plot_loco(csv: str | Path, out: str | Path) -> None:
+def plot_loco(csv: str | Path, out: str | Path, detector: str = "YOLOv4-tiny") -> None:
     """AUC with intervals and ECE per held-out clip: combined features vs. the count baseline."""
     import matplotlib
 
@@ -44,7 +44,7 @@ def plot_loco(csv: str | Path, out: str | Path) -> None:
     a.plot([], [], "o", color="#555", label="quality + health (filled)")
     a.plot([], [], "D", color="#555", mfc="white", label="count ratio only (open)")
     a.legend(frameon=False, fontsize=8, loc="lower left")
-    fig.suptitle("UA-DETRAC, human-labelled boxes: train on 11 clips, test on the 12th",
+    fig.suptitle(f"UA-DETRAC, human boxes, {detector}: train on 11 clips, test on the 12th",
                  fontsize=10)
     fig.tight_layout()
     fig.savefig(out, dpi=160)
@@ -56,8 +56,9 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--csv", default="docs/results/detrac_leave_one_clip_out.csv")
     ap.add_argument("--out", default="docs/assets/detrac_loco.png")
+    ap.add_argument("--detector", default="YOLOv4-tiny")
     args = ap.parse_args(argv)
-    plot_loco(args.csv, args.out)
+    plot_loco(args.csv, args.out, args.detector)
     print(f"wrote {args.out}")
     return 0
 

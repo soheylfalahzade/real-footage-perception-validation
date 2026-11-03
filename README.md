@@ -106,7 +106,8 @@ and fog 0.5 are survived (0.73).
 | the monitor beats simple baselines | **partially supported**: beats brightness-only (about 0.55); not shown to beat the count-ratio baseline | `docs/results/analysis.json` |
 | probabilities transfer across sites | **not supported**: ECE 0.12-0.23 across clips | `docs/results/analysis.json` |
 | the monitor works against human-labelled boxes (UA-DETRAC, 12 clips) | temporal split combined AUC 0.973 [0.957, 0.985]; leave-one-clip-out median 0.989, worst 0.939 | `docs/results/analysis_detrac.json` |
-| the monitor beats a detector-count baseline on human boxes | **partially supported**: 0.973 [0.957, 0.985] vs 0.947 [0.918, 0.969], intervals overlap; worst clip 0.939 vs 0.879 | `docs/results/analysis_detrac.json` |
+| the monitor beats a detector-count baseline on human boxes | **partially supported** with YOLOv4-tiny: 0.973 [0.957, 0.985] vs 0.947 [0.918, 0.969], intervals overlap, better worst clip (0.939 vs 0.879); **not supported** with YOLOv8-nano: 0.973 vs 0.967, worst clip 0.946 vs 0.960 | `docs/results/analysis_detrac.json`, `docs/results/analysis_detrac_yolov8.json` |
+| the finding holds with a second off-the-shelf detector | combined temporal AUC 0.973 [0.953, 0.987] with YOLOv8-nano, 0.973 with YOLOv4-tiny | `docs/results/analysis_detrac_yolov8.json` |
 | probabilities transfer across clips with human boxes | **partially supported**: leave-one-clip-out ECE median 0.036, worst 0.116 (a rainy clip) | `docs/results/analysis_detrac.json` |
 | monitoring improves control on real footage | **not tested** | |
 
@@ -206,6 +207,31 @@ in the median and clearly worse in the worst case (AUC 0.879 on MVI_40172, ECE 0
 Against human boxes, calibration transferred across clips far better (median ECE 0.036) than across the two
 pseudo-ground-truth clips above (0.12 to 0.23); the two experiments differ in clips, labels and number of
 training clips, so this is not a controlled comparison. The degradations remain synthetic.
+
+### Second detector (YOLOv8-nano)
+
+The same 12 clips, streams and protocol with the detector replaced by YOLOv8-nano (ONNX, no training); 74.0 % of
+the frames are labelled reliable (69.6 % with YOLOv4-tiny).
+
+| | YOLOv4-tiny | YOLOv8-nano |
+|---|---|---|
+| temporal split, combined AUC [95% CI] | 0.973 [0.957, 0.985] | 0.973 [0.953, 0.987] |
+| temporal split, count ratio only AUC | 0.947 [0.918, 0.969] | 0.967 [0.947, 0.983] |
+| temporal split, combined ECE | 0.016 | 0.053 |
+| leave-one-clip-out, combined AUC: median (worst clip) | 0.989 (0.939) | 0.994 (0.946) |
+| leave-one-clip-out, count ratio only AUC: median (worst clip) | 0.988 (0.879) | 0.992 (0.960) |
+| leave-one-clip-out, combined ECE: median (worst clip) | 0.036 (0.116) | 0.049 (0.132) |
+| leave-one-clip-out, count ratio only ECE: median (worst clip) | 0.058 (0.297) | 0.052 (0.229) |
+| leave-one-clip-out, brightness only AUC: median | 0.662 | 0.731 |
+
+<p align="center"><img src="docs/assets/detrac_loco_yolov8.png" alt="Leave-one-clip-out results with YOLOv8-nano" width="900"></p>
+
+The level of the combined features replicates: AUC 0.973 on the temporal split with both detectors. The advantage
+over the count-ratio baseline does not: with YOLOv8-nano the baseline reaches 0.967 against 0.973 (intervals
+overlap) and its worst clip is better (0.960 against 0.946), whereas with YOLOv4-tiny the combined features had the
+better worst clip (0.939 against 0.879). The combined features keep the lower worst-case calibration error (0.132
+against 0.229, both on the night clip MVI_40732), while the temporal-split ECE is higher with YOLOv8-nano
+(0.053 against 0.016). The per-clip values are in `docs/results/detrac_leave_one_clip_out_yolov8.csv`.
 
 ## Extending the evaluation
 
